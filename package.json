@@ -1,0 +1,24 @@
+{
+  "name": "plus",
+  "version": "0.0.1",
+  "description": "A simple template system",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/wartman/plus.git"
+  },
+  "author": "wartman",
+  "license": "MIT",
+  "dependencies": {
+    "util": "git://github.com/wartman/util.git#0.0.1"
+  },
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "gulp": "^3.8.10",
+    "gulp-mocha": "^2.0.0"
+  }
+}
