@@ -1,4 +1,4 @@
-var Class = require('util/simple-class')
+var Class = require('simple-class')
 var utils = require('./utils')
 
 // Runtime

@@ -1,6 +1,6 @@
 {
   "name": "plus",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A simple template system",
   "main": "index.js",
   "private": true,
@@ -14,7 +14,7 @@
   "author": "wartman",
   "license": "MIT",
   "dependencies": {
-    "util": "git://github.com/wartman/util.git#0.0.1"
+    "simple-class": "git://github.com/wartman/simple-class.git#0.0.1"
   },
   "devDependencies": {
     "chai": "^1.10.0",
