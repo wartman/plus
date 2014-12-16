@@ -10,7 +10,7 @@ class Plus {
 
   constructor(options) {
     this._tags = tags
-    this._tags.DELIMITERS = delimiters // temp
+    this._tags.DELIMITERS = delimiters // temp, rethink the way you pass these guys around
     this._runtime = new Runtime()
     this._loader = false
   }
@@ -50,26 +50,25 @@ class Plus {
       name = false
     }
     var compiler = new Compiler(template, this.getTags(), this.getLoader())
-    var self = this
     options || (options = {})
     if (name) {
       compiler.setTemplateName(name)
     } else {
       name = uniqueId('tpl')
     }
-    compiler.compile(function (err, template) {
+    compiler.compile((err, template) => {
       var tpl
       if (err) {
         next(err)
         return
       }
-      self._runtime.addTemplate(name, template)
+      this._runtime.addTemplate(name, template)
       if (options.noWrap) {
-        tpl = self._runtime.getTemplate(name)
+        tpl = this._runtime.getTemplate(name)
       } else {
         tpl = function (locals) {
-          return self.run(self._runtime.getTemplate(name), locals)
-        }
+          return this.run(this._runtime.getTemplate(name), locals)
+        }.bind(this)
       }
       next(null, tpl)
     })

@@ -2,11 +2,12 @@
 
 var each = require('./utils').each;
 var escapeJS = require('./utils').escapeJS;
-var tags = exports.tags = {};
 var delimiters = exports.delimiters = {
   open: "{{",
   close: "}}"
 };
+
+var tags = exports.tags = {};
 
 // Inheritance
 // -----------

@@ -1,5 +1,5 @@
 import Scanner from './scanner'
-import * as utils from './utils'
+import {each, escapeRegExp} from './utils'
 
 // A cache for tags, so they only need to be built once.
 var _tagsCache = {
@@ -35,15 +35,15 @@ class Tokenizer {
       this._closeTag = _tagsCache.closeTag
       return
     }
-    this._openTag = _tagsCache.openTag = new RegExp(utils.escapeRegExp(this._delimiters.open) + '\\s*')
-    this._closeTag = _tagsCache.closeTag = new RegExp('\\s*' + utils.escapeRegExp(this._delimiters.close))
-    utils.each(this._tags, function (val, name) {
+    this._openTag = _tagsCache.openTag = new RegExp(escapeRegExp(this._delimiters.open) + '\\s*')
+    this._closeTag = _tagsCache.closeTag = new RegExp('\\s*' + escapeRegExp(this._delimiters.close))
+    each(this._tags, (val, name) => {
       if (name === 'DELIMITERS') return
       if (!val.tag) return
       symbols.push(val.tag)
       sorts[val.tag] = name
     })
-    symbols.sort(function (a, b) {
+    symbols.sort((a, b) => {
       var aName = sorts[a]
       var bName = sorts[b]
       if (self._tags[aName].priority > self._tags[bName].priority) {
@@ -53,8 +53,8 @@ class Tokenizer {
       }
       return 0
     })
-    utils.each(symbols, function (tag, index) {
-      symbols[index] = utils.escapeRegExp(tag)
+    each(symbols,(tag, index) => {
+      symbols[index] = escapeRegExp(tag)
     })
     this._symbols = _tagsCache.symbols = new RegExp(symbols.join('|'))
     this._tags = _tagsCache.tags = symbols

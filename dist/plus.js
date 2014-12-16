@@ -13,7 +13,7 @@ var uniqueId = require('./utils').uniqueId;
 var Plus = (function () {
   var Plus = function Plus(options) {
     this._tags = tags;
-    this._tags.DELIMITERS = delimiters; // temp
+    this._tags.DELIMITERS = delimiters; // temp, rethink the way you pass these guys around
     this._runtime = new Runtime();
     this._loader = false;
   };
@@ -42,6 +42,7 @@ var Plus = (function () {
   };
 
   Plus.prototype.compile = function (name, template, next, options) {
+    var _this = this;
     if ("function" === typeof template) {
       options = next;
       next = template;
@@ -49,7 +50,6 @@ var Plus = (function () {
       name = false;
     }
     var compiler = new Compiler(template, this.getTags(), this.getLoader());
-    var self = this;
     options || (options = {});
     if (name) {
       compiler.setTemplateName(name);
@@ -62,13 +62,13 @@ var Plus = (function () {
         next(err);
         return;
       }
-      self._runtime.addTemplate(name, template);
+      _this._runtime.addTemplate(name, template);
       if (options.noWrap) {
-        tpl = self._runtime.getTemplate(name);
+        tpl = _this._runtime.getTemplate(name);
       } else {
         tpl = function (locals) {
-          return self.run(self._runtime.getTemplate(name), locals);
-        };
+          return this.run(this._runtime.getTemplate(name), locals);
+        }.bind(_this);
       }
       next(null, tpl);
     });

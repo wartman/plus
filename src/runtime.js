@@ -5,12 +5,9 @@ import {each, escapeHTML} from './utils'
 class Runtime {
 
   constructor(templates) {
-    var self = this
     this._templates = {}
     this._filters = {}
-    each(templates, function (name, tpl) {
-      self._templates[name] = tpl
-    })
+    each(templates, (name, tpl) => this._templates[name] = tpl)
   }
 
   setFilter(name, helper) {

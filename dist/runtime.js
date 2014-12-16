@@ -8,11 +8,11 @@ var escapeHTML = require('./utils').escapeHTML;
 // -------
 var Runtime = (function () {
   var Runtime = function Runtime(templates) {
-    var self = this;
+    var _this = this;
     this._templates = {};
     this._filters = {};
     each(templates, function (name, tpl) {
-      self._templates[name] = tpl;
+      return _this._templates[name] = tpl;
     });
   };
 

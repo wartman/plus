@@ -21,22 +21,21 @@ class Compiler {
 
   // Parse the provided string into a template function.
   compile(next) {
-    var self = this
     this._compiled = "ctx || (ctx = {});\nvar __t='';\n__t+=\'"
     return this
-      .setOnDone(function () {
-        self._compiled += "\';\n return __t"
+      .setOnDone(() => {
+        this._compiled += "\';\n return __t"
         var err = null
-        if (self.hasErrors()) {
-          next(self.getLastWrappedError())
+        if (this.hasErrors()) {
+          next(this.getLastWrappedError())
           return
         }
         try {
-          self._template = Function('ctx, __runtime', self._compiled)
+          this._template = Function('ctx, __runtime', this._compiled)
         } catch (e) {
           err = e
         }
-        next(err, self._template)
+        next(err, this._template)
       })
       .pipe(this._raw)
       .write()

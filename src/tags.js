@@ -1,10 +1,15 @@
 import {each, escapeJS} from './utils'
 
-export var tags = {}
+// Delimiters
+// ----------
 export var delimiters = {
   open: '{{',
   close: '}}'
 }
+
+// Tags
+// ----
+export var tags = {}
 
 // Inheritance
 // -----------
@@ -18,7 +23,7 @@ tags.include = {
       return
     }
     var path = loader.resolve(token.value, compiler.getTemplateName())
-    loader.load(path, function (err, template) {
+    loader.load(path, (err, template) => {
       if (err) {
         compiler.setError(err).exit()
         return
@@ -123,9 +128,9 @@ tags.escape = {
   handler: function (token, compiler) {
     if (token.value.indexOf('(') > 0) {
       // Compile as a helper.
-      var helper = token.value.replace(/\(([\s\S]+?)\)/g, function (match, args) {
+      var helper = token.value.replace(/\(([\s\S]+?)\)/g, (match, args) => {
         var argsParsed = args.split(',')
-        return '(' + each(argsParsed, function (arg, index) {
+        return '(' + each(argsParsed, (arg, index) => {
           if( arg.indexOf('"') >= 0 || arg.indexOf("'") >= 0) {
             argsParsed[index] = escapeJS(arg)
             return

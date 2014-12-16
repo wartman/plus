@@ -1,7 +1,9 @@
 "use strict";
 
 var Scanner = require('./scanner')["default"];
-var utils = require('./utils');
+var each = require('./utils').each;
+var escapeRegExp = require('./utils').escapeRegExp;
+
 
 // A cache for tags, so they only need to be built once.
 var _tagsCache = {
@@ -36,9 +38,9 @@ var Tokenizer = (function () {
       this._closeTag = _tagsCache.closeTag;
       return;
     }
-    this._openTag = _tagsCache.openTag = new RegExp(utils.escapeRegExp(this._delimiters.open) + "\\s*");
-    this._closeTag = _tagsCache.closeTag = new RegExp("\\s*" + utils.escapeRegExp(this._delimiters.close));
-    utils.each(this._tags, function (val, name) {
+    this._openTag = _tagsCache.openTag = new RegExp(escapeRegExp(this._delimiters.open) + "\\s*");
+    this._closeTag = _tagsCache.closeTag = new RegExp("\\s*" + escapeRegExp(this._delimiters.close));
+    each(this._tags, function (val, name) {
       if (name === "DELIMITERS") return;
       if (!val.tag) return;
       symbols.push(val.tag);
@@ -54,8 +56,8 @@ var Tokenizer = (function () {
       }
       return 0;
     });
-    utils.each(symbols, function (tag, index) {
-      symbols[index] = utils.escapeRegExp(tag);
+    each(symbols, function (tag, index) {
+      symbols[index] = escapeRegExp(tag);
     });
     this._symbols = _tagsCache.symbols = new RegExp(symbols.join("|"));
     this._tags = _tagsCache.tags = symbols;

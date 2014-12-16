@@ -22,21 +22,21 @@ var Compiler = (function () {
   };
 
   Compiler.prototype.compile = function (next) {
-    var self = this;
+    var _this = this;
     this._compiled = "ctx || (ctx = {});\nvar __t='';\n__t+='";
     return this.setOnDone(function () {
-      self._compiled += "';\n return __t";
+      _this._compiled += "';\n return __t";
       var err = null;
-      if (self.hasErrors()) {
-        next(self.getLastWrappedError());
+      if (_this.hasErrors()) {
+        next(_this.getLastWrappedError());
         return;
       }
       try {
-        self._template = Function("ctx, __runtime", self._compiled);
+        _this._template = Function("ctx, __runtime", _this._compiled);
       } catch (e) {
         err = e;
       }
-      next(err, self._template);
+      next(err, _this._template);
     }).pipe(this._raw).write();
   };
 
