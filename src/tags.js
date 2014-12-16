@@ -11,8 +11,21 @@ exports.include = {
   tag: '>',
   priority: 0,
   handler: function (token, compiler) {
-    compiler.addDependency(token.value)
-    compiler.write('\';\n__t+=__runtime.includeTemplate("' + token.value + '", ctx);\n__t+=\'')
+    var loader = compiler.getLoader()
+    if (!loader) {
+      compiler.setError('No loader registered')
+      return
+    }
+    var path = loader.resolve(token.value, compiler.getTemplateName())
+    loader.load(path, function (err, template) {
+      if (err) {
+        compiler.setError(err).exit()
+        return
+      }
+      compiler
+        .pipe(template)
+        .next()
+    })
   }
 }
 
@@ -22,8 +35,11 @@ exports.block = {
   tag: '+',
   priority: 1,
   handler: function (token, compiler) {
-    var value = compiler.getContext(token)
-    compiler.blocks.push(token)
+    var value = compiler.parseContext(token)
+    compiler.openBlock({
+      name: token.value,
+      type: 'block'
+    })
     compiler.write('\';\n__runtime.block(ctx, ' + value + ', function (ctx, sub) {\n__t+=\'')
   }
 }
@@ -32,11 +48,23 @@ exports.end = {
   tag: '/',
   priority: 1,
   handler: function (token, compiler) {
-    var index = compiler.blocks.indexOf(token.value)
-    if ("undefined" !== typeof index && token.value !== undefined) {
-      compiler.blocks.splice(index, 1)
+    var currentBlock = compiler.getOpenBlock()
+    // Generic blocks must be named when closed (e.g. `{{+foo}}...{{/foo}})
+    // while `ifelse` blocks may be closed anonymously (e.g, `{{?foo}}...{{/}})
+    if (!currentBlock) {
+      compiler
+        .setError('No open block: ' + token.value || "[anonymous]")
+        .exit()
+      return
+    } else if ('block' === currentBlock.type && currentBlock.name === token.value) {
+      compiler.closeOpenBlock()
+    } else if ('ifelse' === currentBlock.type) {
+      compiler.closeOpenBlock()
     } else {
-      throw new Error('Unclosed block: ' + token.value)
+      compiler
+        .setError('Unclosed block: ' + currentBlock.name)
+        .exit()
+      return
     }
     compiler.write('\';\n});\n__t+=\'')
   }
@@ -44,13 +72,16 @@ exports.end = {
 
 // Conditionals
 // ------------
-exports.elif = {
+exports.ifelse = {
   tag: '?',
   priority: 0,
   handler: function (token, compiler) {
-    var value = compiler.getContext(token)
-    compiler.blocks.push(token)
-    compiler.write('\';\n__runtime.elif(ctx, ' + value + ', function (ctx){\n__t+=\'')
+    compiler.openBlock({
+      name: token.value,
+      type: 'ifelse'
+    })
+    var value = compiler.parseContext(token)
+    compiler.write('\';\n__runtime.ifelse(ctx, ' + value + ', function (ctx){\n__t+=\'')
   }
 }
 
@@ -58,6 +89,18 @@ exports.negate = {
   tag: '!',
   priority: 1,
   handler: function (token, compiler) {
+    var currentBlock = compiler.getOpenBlock()
+    if (!currentBlock) {
+      compiler
+        .setError('No open block: ' + token.value)
+        .exit()
+      return
+    } else if (currentBlock.type === 'block' && currentBlock.name != token.value) {
+      compiler
+        .setError('Unclosed block: ' + token.value)
+        .exit()
+      return
+    }
     compiler.write('\';\n}, function (ctx) {\n__t+=\'')
   }
 }
@@ -68,7 +111,7 @@ exports.unescaped = {
   tag: '-',
   priority: 1,
   handler: function (token, compiler) {
-    var value = compiler.getContext(token)
+    var value = compiler.parseContext(token)
     compiler.write('\'+(' + value + '||\'\')+\'')
   }
 }
@@ -86,13 +129,13 @@ exports.escape = {
             argsParsed[index] = utils.escapeJS(arg)
             return
           }
-          argsParsed[index] = compiler.getContext(arg)
+          argsParsed[index] = compiler.parseContext(arg)
         }).join(',') + ')'
       })
       compiler.write('\'+__runtime.escapeHtml(__runtime.' + helper + '||\'\')+\'')
       return
     }
-    var value = compiler.getContext(token)
+    var value = compiler.parseContext(token)
     compiler.write('\'+__runtime.escapeHtml(' + value + '||\'\')+\'')
   }
 }

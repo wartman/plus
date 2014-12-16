@@ -7,14 +7,23 @@ var Runtime = Class.extend({
 
   constructor: function (templates) {
     var self = this
-    this.templates = {}
+    this._templates = {}
+    this._filters = {}
     utils.each(templates, function (name, tpl) {
-      self.templates[name] = tpl
+      self._templates[name] = tpl
     })
   },
 
-  registerHelper: function (name, helper) {
-    this[name] = helper
+  setFilter: function (name, helper) {
+    this._filters[name] = helper
+  },
+
+  getFilter: function (name) {
+    return this._filters[name]
+  },
+
+  hasFilter: function (name) {
+    return !!this._filters[name]
   },
 
   // Parse a template block.
@@ -30,19 +39,18 @@ var Runtime = Class.extend({
     tpl(locals, context)
   },
 
-  // Run an else/if block
-  elif: function (locals, context, tpl, negateTpl) {
+  // Run an if/else block
+  ifelse: function (locals, context, tpl, negateTpl) {
     if (!context) tpl = (negateTpl || '')
     if ('function' !== typeof tpl) return
     tpl(locals)
   },
 
   // Safely escape HTML
-  escapeHtml: function (string) {
-    string = "" + string
-    return string.replace(utils.match, function (key) {
-      return utils.entityMap[key]
-    })
+  escapeHtml: function (string, helper) {
+    if (helper && this.hasFilter(helper))
+      string = this.getFilter(helper)(string)
+    return utils.escapeHTML(string)
   },
 
   urlEncode: function(url) {
@@ -50,15 +58,13 @@ var Runtime = Class.extend({
   },
 
   // Used by 'renderTemplate'
-  registerTemplate: function (name, template) {
-    this.templates[name] = template
+  addTemplate: function (name, template) {
+    this._templates[name] = template
   },
 
-  includeTemplate: function (tplName, locals) {
-    if (this.templates.hasOwnProperty(tplName)) {
-      return this.templates[tplName](locals, this)
-    }
-    throw new Error('No template of that name is registered: ' + tplName)
+  getTemplate: function (name) {
+    if (!name) return this._templates
+    return this._templates[name]
   }
 
 })

@@ -14,7 +14,7 @@
   "author": "wartman",
   "license": "MIT",
   "dependencies": {
-    "simple-class": "git://github.com/wartman/simple-class.git#0.0.1"
+    "simple-class": "git://github.com/wartman/simple-class"
   },
   "devDependencies": {
     "chai": "^1.10.0",

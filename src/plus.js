@@ -14,50 +14,78 @@ var Plus = Class.extend({
   delimiters: tags.DELIMITERS,
 
   constructor: function (options) {
-    this.runtime = new Runtime()
+    this._runtime = new Runtime()
+    this._loader = false
   },
 
-  registerHelper: function (name, helper) {
-    this.runtime.registerHelper(name, helper)
+  setFilter: function (name, helper) {
+    this._runtime.setFilter(name, helper)
+    return this
   },
 
-  registerLoader: function (loader) {
-    if (!loader.resolver || !loader.load) 
-      throw new Error('Loader must have a resolver and a load method')
-    this.loader = loader
+  setLoader: function (loader) {
+    if (!loader.resolve || !loader.load) 
+      throw new Error('Loader must have a `resolve` and a `load` method')
+    this._loader = loader
+    return this
+  },
+
+  getLoader: function () {
+    return this._loader
+  },
+
+  getRuntime: function () {
+    return this._runtime
+  },
+
+  getTags: function () {
+    return this.tags
   },
 
   // Compile a template. If 'noWrap' is false, you can run the template
   // directly. Otherwise, you'll need to pass the compiled
   // function to Plus.run
-  compile: function (name, template, noWrap) {
-    if (!template) {
+  compile: function (name, template, next, options) {
+    if ('function' === typeof template) {
+      options = next
+      next = template
       template = name
+      name = false
+    }
+    var compiler = new Compiler(template, this.getTags(), this.getLoader())
+    var self = this
+    options || (options = {})
+    if (name) {
+      compiler.setTemplateName(name)
+    } else {
       name = utils.uniqueId('tpl')
     }
-    var compiler = new Compiler(template, this.tags, this.delimiters)
-    this.runtime.registerTemplate(name, compiler.compile())
-    if (compiler.dependencies.length > 0) {
-      var self = this
-      utils.each(compiler.dependencies, function (dep) {
-        if (self.runtime.templates[dep]) return
-        if (self.loader) self.loader.load(self.loader.resolve(dep, name))
-      })
-    }
-    if (noWrap) return this.runtime.templates[name]
-    var self = this
-    return function (locals) {
-      return self.run(self.runtime.templates[name], locals)
-    }
+    compiler.compile(function (err, template) {
+      var tpl
+      if (err) {
+        next(err)
+        return
+      }
+      self._runtime.addTemplate(name, template)
+      if (options.noWrap) {
+        tpl = self._runtime.getTemplate(name)
+      } else {
+        tpl = function (locals) {
+          return self.run(self._runtime.getTemplate(name), locals)
+        }
+      }
+      next(null, tpl)
+    })
+    return this
   },
 
   // Run a precompiled template. If compiledTemplate is a string, 
   // plus will attempt to find a template with that name.
   run: function (compiledTemplate, locals) {
     if ('string' === typeof compiledTemplate) {
-      return this.runtime.includeTemplate(compiledTemplate, locals)
+      compiledTemplate = this._runtime.getTemplate(compiledTemplate)
     }
-    return compiledTemplate(locals, this.runtime)
+    return compiledTemplate(locals, this._runtime)
   }
 
 }, {
@@ -66,12 +94,20 @@ var Plus = Class.extend({
     return this.getInstance().run(compiledTemplate, locals)
   },
 
-  compile: function (name, template) {
-    return this.getInstance().compile(name, template)
+  compile: function (name, template, next) {
+    return this.getInstance().compile(name, template, next)
   },
 
-  precompile: function (name, template) {
-    return this.getInstance().compile(name, template, true)
+  precompile: function (name, template, next) {
+    return this.getInstance().compile(name, template, next, {noWrap: true})
+  },
+
+  setLoader: function (loader) {
+    return this.getInstance().setLoader(loader)
+  },
+
+  getLoader: function () {
+    return this.getInstance().getLoader()
   },
 
   getInstance: function () {
