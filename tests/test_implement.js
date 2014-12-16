@@ -2,7 +2,7 @@ var expect = require('chai').expect
 var fs = require('fs')
 var path = require('path')
 var Plus = require('../')
-var loader = require('../src/default-loader')
+var loader = require('../examples/default-loader')
 
 describe('Plus', function () {
   

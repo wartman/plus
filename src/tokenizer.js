@@ -1,6 +1,5 @@
-var Class = require('simple-class')
-var Scanner = require('./scanner')
-var utils = require('./utils')
+import Scanner from './scanner'
+import * as utils from './utils'
 
 // A cache for tags, so they only need to be built once.
 var _tagsCache = {
@@ -14,17 +13,17 @@ var _tagsCache = {
 
 // Tokenizer
 // ---------
-var Tokenizer = Class.extend({
+class Tokenizer {
 
-  constructor: function (template, tags) {
+  constructor(template, tags) {
     this._raw = template
     this._tags = tags
     this._delimiters = tags.DELIMITERS
     this._tokens = []
     this._buildTags()
-  },
+  }
 
-  _buildTags: function () {
+  _buildTags() {
     var symbols = []
     var sorts = {}
     var self = this
@@ -62,9 +61,9 @@ var Tokenizer = Class.extend({
     this._tagNames = _tagsCache.tagNames = sorts
     _tagsCache.built = true
     // console.log(this._tagNames, this._symbols, this._tags)
-  },
+  }
 
-  parse: function () {
+  parse() {
     var scanner = new Scanner(this._raw)
 
     while (!scanner.eos()) {
@@ -93,12 +92,12 @@ var Tokenizer = Class.extend({
       this._tokens.push(token)
     }
     return this._tokens
-  },
+  }
 
-  getTokens: function () {
+  getTokens() {
     return this._tokens
   }
 
-})
+}
 
-module.exports = Tokenizer
+export default Tokenizer

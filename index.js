@@ -1,1 +1,1 @@
-module.exports = require('./src/plus')
+module.exports = require('./dist/plus')['default']

@@ -1,72 +1,71 @@
-var Class = require('simple-class')
-var utils = require('./utils')
+import {each, escapeHTML} from './utils'
 
 // Runtime
 // -------
-var Runtime = Class.extend({
+class Runtime {
 
-  constructor: function (templates) {
+  constructor(templates) {
     var self = this
     this._templates = {}
     this._filters = {}
-    utils.each(templates, function (name, tpl) {
+    each(templates, function (name, tpl) {
       self._templates[name] = tpl
     })
-  },
+  }
 
-  setFilter: function (name, helper) {
+  setFilter(name, helper) {
     this._filters[name] = helper
-  },
+  }
 
-  getFilter: function (name) {
+  getFilter(name) {
     return this._filters[name]
-  },
+  }
 
-  hasFilter: function (name) {
+  hasFilter(name) {
     return !!this._filters[name]
-  },
+  }
 
   // Parse a template block.
-  block: function (locals, context, tpl, negateTpl) {
+  block(locals, context, tpl, negateTpl) {
     if (!context) tpl = (negateTpl || '')
     if ('function' !== typeof tpl) return
     if (context instanceof Array) {
-      utils.each(context, function (item) {
+      each(context, function (item) {
         tpl(locals, item)
       })
       return
     }
     tpl(locals, context)
-  },
+  }
 
   // Run an if/else block
-  ifelse: function (locals, context, tpl, negateTpl) {
+  ifelse(locals, context, tpl, negateTpl) {
     if (!context) tpl = (negateTpl || '')
     if ('function' !== typeof tpl) return
     tpl(locals)
-  },
+  }
 
   // Safely escape HTML
-  escapeHtml: function (string, helper) {
+  escapeHtml(string, helper) {
     if (helper && this.hasFilter(helper))
       string = this.getFilter(helper)(string)
-    return utils.escapeHTML(string)
-  },
+    return escapeHTML(string)
+  }
 
-  urlEncode: function(url) {
+  urlEncode(url) {
     return encodeURIComponent(url);
-  },
+  }
 
   // Used by 'renderTemplate'
-  addTemplate: function (name, template) {
+  addTemplate(name, template) {
     this._templates[name] = template
-  },
+  }
 
-  getTemplate: function (name) {
+  getTemplate(name) {
     if (!name) return this._templates
     return this._templates[name]
   }
 
-})
+}
 
-module.exports = Runtime
+export default Runtime

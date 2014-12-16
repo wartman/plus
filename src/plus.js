@@ -1,51 +1,48 @@
-var Class = require('simple-class')
-var tags = require('./tags')
-var Runtime = require('./runtime')
-var Compiler = require('./compiler')
-var utils = require('./utils')
+import {tags, delimiters} from './tags'
+import Runtime from './runtime'
+import Compiler from './compiler'
+import {uniqueId} from './utils'
 
 // Plus
 // ----
 // The primary API
-var Plus = Class.extend({
+class Plus {
 
-  tags: tags,
-
-  delimiters: tags.DELIMITERS,
-
-  constructor: function (options) {
+  constructor(options) {
+    this._tags = tags
+    this._tags.DELIMITERS = delimiters // temp
     this._runtime = new Runtime()
     this._loader = false
-  },
+  }
 
-  setFilter: function (name, helper) {
+  setFilter(name, helper) {
     this._runtime.setFilter(name, helper)
     return this
-  },
+  }
 
-  setLoader: function (loader) {
+  setLoader(loader) {
     if (!loader.resolve || !loader.load) 
       throw new Error('Loader must have a `resolve` and a `load` method')
     this._loader = loader
     return this
-  },
+  }
 
-  getLoader: function () {
+  getLoader() {
     return this._loader
-  },
+  }
 
-  getRuntime: function () {
+  getRuntime() {
     return this._runtime
-  },
+  }
 
-  getTags: function () {
-    return this.tags
-  },
+  getTags() {
+    return this._tags
+  }
 
   // Compile a template. If 'noWrap' is false, you can run the template
   // directly. Otherwise, you'll need to pass the compiled
   // function to Plus.run
-  compile: function (name, template, next, options) {
+  compile(name, template, next, options) {
     if ('function' === typeof template) {
       options = next
       next = template
@@ -58,7 +55,7 @@ var Plus = Class.extend({
     if (name) {
       compiler.setTemplateName(name)
     } else {
-      name = utils.uniqueId('tpl')
+      name = uniqueId('tpl')
     }
     compiler.compile(function (err, template) {
       var tpl
@@ -77,44 +74,42 @@ var Plus = Class.extend({
       next(null, tpl)
     })
     return this
-  },
+  }
 
   // Run a precompiled template. If compiledTemplate is a string, 
   // plus will attempt to find a template with that name.
-  run: function (compiledTemplate, locals) {
+  run(compiledTemplate, locals) {
     if ('string' === typeof compiledTemplate) {
       compiledTemplate = this._runtime.getTemplate(compiledTemplate)
     }
     return compiledTemplate(locals, this._runtime)
   }
 
-}, {
+}
 
-  run: function (compiledTemplate, locals) {
-    return this.getInstance().run(compiledTemplate, locals)
-  },
+Plus.run = function (compiledTemplate, locals) {
+  return this.getInstance().run(compiledTemplate, locals)
+}
 
-  compile: function (name, template, next) {
-    return this.getInstance().compile(name, template, next)
-  },
+Plus.compile = function (name, template, next) {
+  return this.getInstance().compile(name, template, next)
+}
 
-  precompile: function (name, template, next) {
-    return this.getInstance().compile(name, template, next, {noWrap: true})
-  },
+Plus.precompile = function (name, template, next) {
+  return this.getInstance().compile(name, template, next, {noWrap: true})
+}
 
-  setLoader: function (loader) {
-    return this.getInstance().setLoader(loader)
-  },
+Plus.setLoader = function (loader) {
+  return this.getInstance().setLoader(loader)
+}
 
-  getLoader: function () {
-    return this.getInstance().getLoader()
-  },
+Plus.getLoader = function () {
+  return this.getInstance().getLoader()
+}
 
-  getInstance: function () {
-    if (!this._instance) this._instance = new Plus()
-    return this._instance
-  }
+Plus.getInstance = function () {
+  if (!this._instance) this._instance = new Plus()
+  return this._instance
+}
 
-})
-
-module.exports = Plus
+export default Plus

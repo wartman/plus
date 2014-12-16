@@ -1,13 +1,14 @@
-var utils = require('./utils')
+import {each, escapeJS} from './utils'
 
-exports.DELIMITERS = {
+export var tags = {}
+export var delimiters = {
   open: '{{',
   close: '}}'
 }
 
 // Inheritance
 // -----------
-exports.include = {
+tags.include = {
   tag: '>',
   priority: 0,
   handler: function (token, compiler) {
@@ -31,7 +32,7 @@ exports.include = {
 
 // Blocks
 // ------
-exports.block = {
+tags.block = {
   tag: '+',
   priority: 1,
   handler: function (token, compiler) {
@@ -44,7 +45,7 @@ exports.block = {
   }
 }
 
-exports.end = {
+tags.end = {
   tag: '/',
   priority: 1,
   handler: function (token, compiler) {
@@ -72,7 +73,7 @@ exports.end = {
 
 // Conditionals
 // ------------
-exports.ifelse = {
+tags.ifelse = {
   tag: '?',
   priority: 0,
   handler: function (token, compiler) {
@@ -85,7 +86,7 @@ exports.ifelse = {
   }
 }
 
-exports.negate = {
+tags.negate = {
   tag: '!',
   priority: 1,
   handler: function (token, compiler) {
@@ -107,7 +108,7 @@ exports.negate = {
 
 // Output
 // ------
-exports.unescaped = {
+tags.unescaped = {
   tag: '-',
   priority: 1,
   handler: function (token, compiler) {
@@ -116,7 +117,7 @@ exports.unescaped = {
   }
 }
 
-exports.escape = {
+tags.escape = {
   tag: null,
   priority: 2,
   handler: function (token, compiler) {
@@ -124,9 +125,9 @@ exports.escape = {
       // Compile as a helper.
       var helper = token.value.replace(/\(([\s\S]+?)\)/g, function (match, args) {
         var argsParsed = args.split(',')
-        return '(' + utils.each(argsParsed, function (arg, index) {
+        return '(' + each(argsParsed, function (arg, index) {
           if( arg.indexOf('"') >= 0 || arg.indexOf("'") >= 0) {
-            argsParsed[index] = utils.escapeJS(arg)
+            argsParsed[index] = escapeJS(arg)
             return
           }
           argsParsed[index] = compiler.parseContext(arg)
@@ -140,10 +141,10 @@ exports.escape = {
   }
 }
 
-exports.txt = {
+tags.txt = {
   tag: null,
   priority: 2,
   handler: function (token, compiler) {
-    compiler.write('\'+\'' + utils.escapeJS(token.value) + '\'+\'')
+    compiler.write('\'+\'' + escapeJS(token.value) + '\'+\'')
   }
 }

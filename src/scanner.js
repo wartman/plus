@@ -1,31 +1,29 @@
-var Class = require('simple-class')
-
 // Scanner
 // -------
-var Scanner = Class.extend({
+class Scanner {
 
-  constructor: function (string) {
+  constructor(string) {
     this.string = string
     this.tail = string
     this.pos = 0
-  },
+  }
 
-  eos: function () {
+  eos() {
     return this.tail === ''
-  },
+  }
 
   // Try to match the passed regular expression at the current position.
-  scan: function (re) {
+  scan(re) {
     var match = this.tail.match(re)
     if (!match || match.index !== 0) return ''
     var string = match[0]
     this.tail = this.tail.substring(string.length)
     this.pos += string.length
     return string
-  },
+  }
 
   // Skip text until the given expression is matched.
-  scanUntil: function (re) {
+  scanUntil(re) {
     var index = this.tail.search(re), match
     switch (index) {
       case -1:
@@ -43,6 +41,6 @@ var Scanner = Class.extend({
     return match
   }
 
-})
+}
 
-module.exports = Scanner
+export default Scanner

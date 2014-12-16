@@ -1,5 +1,5 @@
 // Iterator
-exports.each = function(obj, callback, context) {
+export function each(obj, callback, context) {
   if(!obj) return obj
   context = (context || obj)
   if(Array.prototype.forEach && obj.forEach){
@@ -23,13 +23,11 @@ exports.each = function(obj, callback, context) {
 }
 
 // Does what it says on the tin
-exports.uniqueId = function () {
-  var counter = 0;
-  return function (prefix) {
-    counter += 1;
-    return prefix + counter.toString(16);
-  };
-}();
+var counter = 0;
+export function uniqueId(prefix) {
+  counter += 1
+  return prefix + counter.toString(16)
+}
 
 // Escape things that javascript might choke on.
 var jsEscapes = {
@@ -43,7 +41,7 @@ var jsEscapes = {
 }
 
 // Make sure a given string is javascript safe.
-exports.escapeJS = function (string) {
+export function escapeJS(string) {
   return string.replace(/\\|'|\r|\n|\t|\u2028|\u2029/g, function (match) {
     return '\\' + jsEscapes[match]
   })
@@ -60,16 +58,16 @@ var entityMap = {
 }
 
 // Matcher for the above.
-var entityMapMatch = (function () {
+var entityMapMatch = (function() {
   var matches = []
-  exports.each(entityMap, function (value, key) {
+  each(entityMap, function (value, key) {
     matches.push(key)
   })
   return new RegExp(matches.join('|'))
 })()
 
 // Make a string HTML safe
-exports.escapeHTML = function (string) {
+export function escapeHTML(string) {
   string = "" + string // ensure stringiness
   return string.replace(entityMapMatch, function (key) {
     return entityMap[key]
@@ -77,6 +75,6 @@ exports.escapeHTML = function (string) {
 }
 
 // Make sure a given string is regexp safe.
-exports.escapeRegExp = function (string) {
+export function escapeRegExp(string) {
   return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&")
 }
