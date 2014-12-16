@@ -16,7 +16,7 @@ export var tags = {}
 tags.include = {
   tag: '>',
   priority: 0,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     var loader = compiler.getLoader()
     if (!loader) {
       compiler.setError('No loader registered')
@@ -40,7 +40,7 @@ tags.include = {
 tags.block = {
   tag: '+',
   priority: 1,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     var value = compiler.parseContext(token)
     compiler.openBlock({
       name: token.value,
@@ -53,7 +53,7 @@ tags.block = {
 tags.end = {
   tag: '/',
   priority: 1,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     var currentBlock = compiler.getOpenBlock()
     // Generic blocks must be named when closed (e.g. `{{+foo}}...{{/foo}})
     // while `ifelse` blocks may be closed anonymously (e.g, `{{?foo}}...{{/}})
@@ -81,7 +81,7 @@ tags.end = {
 tags.ifelse = {
   tag: '?',
   priority: 0,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     compiler.openBlock({
       name: token.value,
       type: 'ifelse'
@@ -94,7 +94,7 @@ tags.ifelse = {
 tags.negate = {
   tag: '!',
   priority: 1,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     var currentBlock = compiler.getOpenBlock()
     if (!currentBlock) {
       compiler
@@ -116,7 +116,7 @@ tags.negate = {
 tags.unescaped = {
   tag: '-',
   priority: 1,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     var value = compiler.parseContext(token)
     compiler.write('\'+(' + value + '||\'\')+\'')
   }
@@ -125,7 +125,7 @@ tags.unescaped = {
 tags.escape = {
   tag: null,
   priority: 2,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     if (token.value.indexOf('(') > 0) {
       // Compile as a helper.
       var helper = token.value.replace(/\(([\s\S]+?)\)/g, (match, args) => {
@@ -149,7 +149,7 @@ tags.escape = {
 tags.txt = {
   tag: null,
   priority: 2,
-  handler: function (token, compiler) {
+  handler(token, compiler) {
     compiler.write('\'+\'' + escapeJS(token.value) + '\'+\'')
   }
 }

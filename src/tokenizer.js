@@ -60,7 +60,6 @@ class Tokenizer {
     this._tags = _tagsCache.tags = symbols
     this._tagNames = _tagsCache.tagNames = sorts
     _tagsCache.built = true
-    // console.log(this._tagNames, this._symbols, this._tags)
   }
 
   parse() {
