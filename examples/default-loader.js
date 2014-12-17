@@ -10,7 +10,7 @@ var defaultLoader = {
   resolve: function (to, from) {
     to = to.trim()
     from = path.dirname(from)
-    return path.resolve(from, to) + '.plus'
+    return path.resolve(from, to)
   },
 
   load: function (path, next) {

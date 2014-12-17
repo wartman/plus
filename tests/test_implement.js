@@ -5,6 +5,10 @@ var Plus = require('../')
 var loader = require('../examples/default-loader')
 
 describe('Plus', function () {
+
+  before(function () {
+    Plus.setLoader(loader)
+  })
   
   describe('#include (>)', function () {
     
@@ -14,7 +18,6 @@ describe('Plus', function () {
           done(err)
           return
         }
-        Plus.setLoader(loader)
         Plus.compile(path.join(__dirname, './fixtures/one.plus'), file, function (err, tpl) {
           if (tpl) {
             expect(tpl({
@@ -28,6 +31,55 @@ describe('Plus', function () {
           done(err)
         })
       })
+    })
+
+  })
+
+  describe('#extend (+>)', function () {
+
+    it('extends templates', function (done) {
+
+      fs.readFile(path.join(__dirname, './fixtures/test-layout.plus'), 'utf-8', function(err, file) {
+        if (err) {
+          done(err)
+          return
+        }
+
+        fs.readFile(path.join(__dirname, './fixtures/test-layout-expected.html'), 'utf-8', function (err, expected) {
+          if (err) {
+            done(err)
+            return
+          }
+
+          Plus.compile(path.join(__dirname, './fixtures/test-layout.plus'), file, function (err, tpl) {
+            if (tpl) {
+              var actual = tpl({
+                header: {
+                  title: 'Foo'
+                },
+                content: {
+                  title: 'Bar',
+                  items: [
+                    {
+                      title: 'item1',
+                      content: 'stuff'
+                    },
+                    {
+                      title: 'item2',
+                      content: 'stuff'
+                    }
+                  ]
+                }
+              })
+              expect(actual).to.equal(expected)
+            }
+            done(err)
+          })
+
+        })
+
+      })
+
     })
 
   })

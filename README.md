@@ -47,13 +47,13 @@ simple layout file ('layout/default.plus'):
 </div>
 ```
 
-We can import a layout file and extend it using the `+>` tag. Here's an example of
+We can import a layout file and extend it using the `>` tag. Here's an example of
 a template that inherits the above layout:
 
 ```
 {{# Example Template }}
 
-{{+> ../layout/default.plus }}
+{{> ../layout/default.plus }}
 
 {{+header-title}}
   <h2>{{title}}</h2>
@@ -64,13 +64,12 @@ a template that inherits the above layout:
 {{/content}}
 ```
 
-You can include partials using the `>` tag (without the "+").
-For example:
+You can include partials using the `>` tag. For example:
 
 ```
 {{# Example Template }}
 
-{{+> ../layout/default.plus }}
+{{> ../layout/default.plus }}
 
 {{+header-title}}
   <h2>{{title}}</h2>
@@ -80,5 +79,8 @@ For example:
   {{> ./partials/content.plus }}
 {{/content}}
 ```
+
+Note how nothing special is happening here: placeholder tags will ALWAYS
+be replaced by a matching block, no matter where you write them.
 
 (More to come)

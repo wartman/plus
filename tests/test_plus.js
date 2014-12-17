@@ -172,20 +172,16 @@ describe('tags', function () {
         })
       })
 
-    })
-
-    describe('#extend (+>)', function () {
-
       it('extends parent templates', function (done) {
-        Plus.compile('{{+> extended }}{{+content}}Body{{/content}}{{+header}}<h1>Foo</h1>{{/header}}', function (err, tpl) {
+        Plus.compile('{{> extended }}{{+content}}Body{{/content}}{{+header}}<h1>Foo</h1>{{/header}}', function (err, tpl) {
           if (tpl) expect(tpl(locals)).to.equal('<header><h1>Foo</h1></header><div class="body">Body</div>')
           done(err)
         })
       })
 
-      it('Removes any output that comes before it', function (done) {
-        Plus.compile('this is a lot of random stuff {{+> extended }}{{+content}}Body{{/content}}{{+header}}<h1>Foo</h1>{{/header}}', function (err, tpl) {
-          if (tpl) expect(tpl(locals)).to.equal('<header><h1>Foo</h1></header><div class="body">Body</div>')
+      it('Keeps any output that comes before it', function (done) {
+        Plus.compile('this is a lot of random stuff {{> extended }}{{+content}}Body{{/content}}{{+header}}<h1>Foo</h1>{{/header}}', function (err, tpl) {
+          if (tpl) expect(tpl(locals)).to.equal('this is a lot of random stuff <header><h1>Foo</h1></header><div class="body">Body</div>')
           done(err)
         })
 

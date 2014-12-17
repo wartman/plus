@@ -42,17 +42,6 @@ tags.include = {
   }
 };
 
-tags.extend = {
-  tag: "+>",
-  priority: 0,
-  handler: function (token, compiler) {
-    // You should only use the extend tag at the top of a page.
-    compiler.setOutput("");
-    // Pass to the include handler
-    tags.include.handler(token, compiler);
-  }
-};
-
 // Blocks
 // ------
 tags.block = {
