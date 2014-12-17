@@ -48,20 +48,10 @@ tags.extend = {
   tag: '+>',
   priority: 0,
   handler(token, compiler) {
-    var loader = compiler.getLoader()
-    if (!loader) {
-      compiler.setError('No loader registered').exit()
-      return
-    }
-    var path = loader.resolve(token.value, compiler.getTemplateName())
-    loader.load(path, (err, template) => {
-      if (err) {
-        compiler.setError(err).exit()
-        return
-      }
-      // You should only use the extend tag at the top of a page.
-      compiler.setOutput('').pipe(template).next()
-    })
+    // You should only use the extend tag at the top of a page.
+    compiler.setOutput('')
+    // Pass to the include handler
+    tags.include.handler(token, compiler)
   }
 }
 

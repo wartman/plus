@@ -32,7 +32,6 @@ var Compiler = (function () {
         return;
       }
       output = "ctx || (ctx = {});\nvar __t='';\n__t+='" + output + "';\n return __t";
-      console.log(output);
       try {
         _this._template = Function("ctx, __runtime", output);
       } catch (e) {

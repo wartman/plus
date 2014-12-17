@@ -141,6 +141,7 @@ describe('tags', function () {
 
   describe('inheritance', function () {
 
+    // Loader shim
     before(function () {
       var fixtures = {
         foo: '{{+obj}}[inner {{.bar}}]{{/obj}}',
