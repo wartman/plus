@@ -1,0 +1,14 @@
+{{> ./layout/default.plus }}
+
+{{+header}}
+  <h1>{{.title}}</h1>
+{{/header}}
+
+{{+content}}
+  <h2>{{.title}}</h2>
+  {{+.items}}
+    {{> ./partials/item.plus}}
+  {{!.items}}
+    <p>No items found</p>
+  {{/.items}}
+{{/content}}

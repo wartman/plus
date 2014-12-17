@@ -1,0 +1,13 @@
+{{# Test Layout }}
+
+<div class="main">
+
+  <header class="header">
+    {{=header}}
+  </header>
+
+  <div class="content">
+    {{=content}}
+  </div>
+
+</div>
