@@ -28,11 +28,20 @@ var Runtime = (function () {
     return !!this._filters[name];
   };
 
-  Runtime.prototype.block = function (locals, context, tpl, negateTpl) {
-    if (!context) tpl = (negateTpl || "");
+  Runtime.prototype.block = function (locals, context, tpl, negateTpl, options) {
+    if ("object" === typeof negateTpl) {
+      options = negateTpl;
+      negateTpl = false;
+    }
+    options || (options = {});
+    if (!context) {
+      context = {};
+      // Placeholders should be rendered even if not content is present
+      tpl = (options.placeholder) ? (negateTpl || tpl) : (negateTpl || "");
+    }
     if ("function" !== typeof tpl) return;
     if (context instanceof Array) {
-      each(context, function (item) {
+      each(context, function (item, index) {
         tpl(locals, item);
       });
       return;

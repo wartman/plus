@@ -15,23 +15,24 @@ class Compiler {
     this._tokens = []
     this._errors = []
     this._onDone = []
-    this._compiled = ''
+    this._output = ''
     this._template = null
   }
 
   // Parse the provided string into a template function.
   compile(next) {
-    this._compiled = "ctx || (ctx = {});\nvar __t='';\n__t+=\'"
     return this
       .setOnDone(() => {
-        this._compiled += "\';\n return __t"
+        this._cleanupPlaceholders()
+        var output = this.getOutput()
         var err = null
         if (this.hasErrors()) {
           next(this.getLastWrappedError())
           return
         }
+        output = "ctx || (ctx = {});\nvar __t='';\n__t+=\'" + output + "\';\n return __t"
         try {
-          this._template = Function('ctx, __runtime', this._compiled)
+          this._template = Function('ctx, __runtime', output)
         } catch (e) {
           err = e
         }
@@ -57,9 +58,12 @@ class Compiler {
 
   // Start writing output
   write(str) {
-    // Add pending content
-    if (str) this._compiled += str
-    // Then parse the next token
+    this.appendOutput(str).next()
+    return this
+  }
+
+  // Move to the next token.
+  next() {
     var token = this._tokens.shift()
     if (!token) {
       // We're done
@@ -76,12 +80,6 @@ class Compiler {
     return this
   }
 
-  // Move to the next token without outputting anything.
-  next() {
-    this.write(false)
-    return this
-  }
-
   // Stop processing tokens, and remove any remaining ones.
   exit() {
     this._tokens = []
@@ -94,47 +92,100 @@ class Compiler {
       var fn = this._onDone.pop()
       fn.apply(this, arguments)
     }
+    return this
   }
 
   // Parse a token for its current context
-  // @todo: this seems like the wrong place to put this?
   parseContext(token) {
     var raw = (token.value || token)
     raw = raw.trim()
     var value = ('.' === raw.charAt(0))
-      ? 'sub' + raw
-      : 'ctx.' + raw
+      ? 'sub["' + raw.replace('.', '') + '"]'
+      : 'ctx["' + raw + '"]'
     return value
   }
 
-  // @todo:
-  // Block functionality here is just preparing for
-  // later inheritance functionality. Need to implement
-  // the ability for blocks to be overwritten
-  openBlock(block) {
-    this._blocks[block.name] = {
-      name: block.name,
-      type: block.type,
-    }
-    this._openBlocks.push(block.name)
-    this._openBlock = block.name
+  // Add a placeholder to the template
+  writePlaceholder(name) {
+    this.write('@PLACEHOLDER' + name + '@')
     return this
   }
 
+  // Remove any unused placeholders
+  _cleanupPlaceholders() {
+    var output = this.getOutput()
+    output = output.replace(/\@PLACEHOLDER\s?\S+\@/g, '')
+    this.setOutput(output)
+    return this
+  }
+
+  // Add a block.
+  addBlock(block) {
+    this._blocks[block.name] = {
+      name: block.name,
+      type: block.type,
+      placeholder: block.placeholder || false,
+      content: []
+    }
+    return this
+  }
+
+  // Open a block, and start adding content to it.
+  openBlock(name) {
+    if (!this.hasBlock(name)) {
+      this.addError('Cannot open blocks that do not exist: ' + name).exit()
+      return this
+    }
+    this._openBlocks.push(name)
+    this._openBlock = name
+    return this
+  }
+
+  hasBlock(block) {
+    return !!this._blocks[block]
+  }
+
+  // Get a block by name
+  getBlock(block) {
+    return this._blocks[block]
+  }
+
+  // Insert a block into the output
+  appendBlockToContent(name) {
+    var block = this.getBlock(name)
+    if (!block) {
+      this
+        .setError('No block found: ' + name)
+        .exit()
+      return this
+    }
+    var content = block.content.join('')
+    if (block.placeholder) {
+      var output = this.getOutput().replace('@PLACEHOLDER' + block.name + '@', content)
+      this.setOutput(output)
+    } else {
+      this.appendOutput(content)
+    }
+    return this
+  }
+
+  // Close the last opened block, and set the parent block
+  // to active (if applicable)
   closeOpenBlock() {
+    var block = this.getOpenBlock()
     this._openBlocks.pop()
     this._openBlock = (this._openBlocks.length > 0)
       ? this._openBlocks[(this._openBlocks.length - 1)]
       : ''
+    if (block && 'block' === block.type) {
+      this.appendBlockToContent(block.name)
+    }
     return this
   }
 
+  // Get the current open block
   getOpenBlock() {
     return this.getBlock(this._openBlock)
-  }
-
-  getBlock(block) {
-    return this._blocks[block]
   }
 
   getTokens() {
@@ -145,6 +196,31 @@ class Compiler {
     return this._loader
   }
 
+  // Add content to the output
+  appendOutput(str) {
+    if (str) {
+      var block = this.getOpenBlock()
+      if (block && 'block' === block.type) {
+        block.content.push(str)
+      } else {
+        this._output += str
+      }
+    }
+    return this
+  }
+
+  // Get the raw content
+  getOutput() {
+    return this._output
+  }
+
+  // Overwrite all content
+  setOutput(content) {
+    this._output = content
+    return this
+  }
+
+  // Get the compiled template
   getTemplate() {
     return this._template
   }

@@ -9,6 +9,17 @@ var delimiters = exports.delimiters = {
 
 var tags = exports.tags = {};
 
+// Comments
+// --------
+tags.comment = {
+  tag: "#",
+  priority: 0,
+  handler: function (token, compiler) {
+    // Just ignore
+    compiler.next();
+  }
+};
+
 // Inheritance
 // -----------
 tags.include = {
@@ -17,7 +28,7 @@ tags.include = {
   handler: function (token, compiler) {
     var loader = compiler.getLoader();
     if (!loader) {
-      compiler.setError("No loader registered");
+      compiler.setError("No loader registered").exit();
       return;
     }
     var path = loader.resolve(token.value, compiler.getTemplateName());
@@ -31,6 +42,27 @@ tags.include = {
   }
 };
 
+tags.extend = {
+  tag: "+>",
+  priority: 0,
+  handler: function (token, compiler) {
+    var loader = compiler.getLoader();
+    if (!loader) {
+      compiler.setError("No loader registered").exit();
+      return;
+    }
+    var path = loader.resolve(token.value, compiler.getTemplateName());
+    loader.load(path, function (err, template) {
+      if (err) {
+        compiler.setError(err).exit();
+        return;
+      }
+      // You should only use the extend tag at the top of a page.
+      compiler.setOutput("").pipe(template).next();
+    });
+  }
+};
+
 // Blocks
 // ------
 tags.block = {
@@ -38,11 +70,31 @@ tags.block = {
   priority: 1,
   handler: function (token, compiler) {
     var value = compiler.parseContext(token);
-    compiler.openBlock({
-      name: token.value,
-      type: "block"
-    });
+    // Don't overwrite placeholders
+    // @todo: This will probably break horribly if two blocks of the same name are
+    // added. Only overwrite placeholders, other blocks should be aliased with a
+    // unique id somehow.
+    if (!compiler.hasBlock(token.value) || !compiler.getBlock(token.value).placeholder) {
+      compiler.addBlock({
+        name: token.value,
+        type: "block"
+      });
+    }
+    compiler.openBlock(token.value);
     compiler.write("';\n__runtime.block(ctx, " + value + ", function (ctx, sub) {\n__t+='");
+  }
+};
+
+tags.placeholder = {
+  tag: "=",
+  priority: 1,
+  handler: function (token, compiler) {
+    compiler.addBlock({
+      name: token.value,
+      type: "block",
+      placeholder: true
+    });
+    compiler.writePlaceholder(token.value);
   }
 };
 
@@ -57,14 +109,17 @@ tags.end = {
       compiler.setError("No open block: " + token.value || "[anonymous]").exit();
       return;
     } else if ("block" === currentBlock.type && currentBlock.name === token.value) {
-      compiler.closeOpenBlock();
+      var output = "';\n}";
+      if (currentBlock.placeholder) output += ",{placeholder:true}";
+      output += ");\n__t+='";
+      compiler.appendOutput(output).closeOpenBlock();
     } else if ("ifelse" === currentBlock.type) {
-      compiler.closeOpenBlock();
+      compiler.appendOutput("';\n});\n__t+='").closeOpenBlock();
     } else {
       compiler.setError("Unclosed block: " + currentBlock.name).exit();
       return;
     }
-    compiler.write("';\n});\n__t+='");
+    compiler.next();
   }
 };
 
@@ -74,10 +129,11 @@ tags.ifelse = {
   tag: "?",
   priority: 0,
   handler: function (token, compiler) {
-    compiler.openBlock({
+    compiler.addBlock({
       name: token.value,
       type: "ifelse"
     });
+    compiler.openBlock(token.value);
     var value = compiler.parseContext(token);
     compiler.write("';\n__runtime.ifelse(ctx, " + value + ", function (ctx){\n__t+='");
   }
@@ -92,7 +148,7 @@ tags.negate = {
       compiler.setError("No open block: " + token.value).exit();
       return;
     } else if (currentBlock.type === "block" && currentBlock.name != token.value) {
-      compiler.setError("Unclosed block: " + token.value).exit();
+      compiler.setError("Unexpected symbol \"!\": " + token.value).exit();
       return;
     }
     compiler.write("';\n}, function (ctx) {\n__t+='");

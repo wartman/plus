@@ -37,6 +37,17 @@ describe('tags', function () {
     ]
   }
 
+  describe('#comments (#)', function () {
+
+    it('is not output', function (done) {
+      Plus.compile('{{# this is a comment }}Foo', function (err, tpl) {
+        if (tpl) expect(tpl()).to.equal('Foo')
+        done(err)
+      })
+    })
+
+  })
+
   describe('#block (+)', function () {
 
     it('iterates over an object', function (done) {
@@ -66,6 +77,31 @@ describe('tags', function () {
       Plus.compile('{{+obj}}{{.foo}}{{/}}', function (err, tpl) {
         expect(err.message).to.equal('Unclosed block: obj')
         done()
+      })
+    })
+
+  })
+
+  describe('#placeholder (=)', function () {
+
+    it('marks places for blocks', function (done) {
+      Plus.compile('This is a {{=foo}} things things{{+foo}}Bar{{/foo}}', function (err, tpl) {
+        if (tpl) expect(tpl({foo:true})).to.equal('This is a Bar things things')
+        done(err)
+      })
+    })
+
+    it('always renders matching block, even if no value is provided', function (done) {
+      Plus.compile('This is a {{=foo}} things things{{+foo}}Bar{{/foo}}', function (err, tpl) {
+        if (tpl) expect(tpl()).to.equal('This is a Bar things things')
+        done(err)
+      })
+    })
+
+    it('is ignored if not implemented', function (done) {
+      Plus.compile('{{=ignore}}Foo', function (err, tpl) {
+        if (tpl) expect(tpl()).to.equal('Foo')
+        done(err)
       })
     })
 
@@ -103,11 +139,12 @@ describe('tags', function () {
 
   })
 
-  describe('#include (>)', function () {
+  describe('inheritance', function () {
 
-    it('includes other templates', function (done) {
+    before(function () {
       var fixtures = {
         foo: '{{+obj}}[inner {{.bar}}]{{/obj}}',
+        extended: '<header>{{=header}}</header><div class="body">{{=content}}</div>',
         bar: 'uh oh'
       }
       Plus.setLoader({
@@ -115,16 +152,44 @@ describe('tags', function () {
           return to
         },
         load: function (path, next) {
+          path = path.trim()
           if (!fixtures[path]) {
             next(new Error('No template found: ' + path || 'undefined'))
             return
           }
           next(null, fixtures[path])
         }
-      }).compile('{{foo}}{{>foo}}', function (err, tpl) {
-        if (tpl) expect(tpl(locals)).to.equal('foo[inner bar]')
-        done(err)
       })
+    })
+
+    describe('#include (>)', function () {
+
+      it('includes other templates', function (done) {
+        Plus.compile('{{foo}}{{>foo}}', function (err, tpl) {
+          if (tpl) expect(tpl(locals)).to.equal('foo[inner bar]')
+          done(err)
+        })
+      })
+
+    })
+
+    describe('#extend (+>)', function () {
+
+      it('extends parent templates', function (done) {
+        Plus.compile('{{+> extended }}{{+content}}Body{{/content}}{{+header}}<h1>Foo</h1>{{/header}}', function (err, tpl) {
+          if (tpl) expect(tpl(locals)).to.equal('<header><h1>Foo</h1></header><div class="body">Body</div>')
+          done(err)
+        })
+      })
+
+      it('Removes any output that comes before it', function (done) {
+        Plus.compile('this is a lot of random stuff {{+> extended }}{{+content}}Body{{/content}}{{+header}}<h1>Foo</h1>{{/header}}', function (err, tpl) {
+          if (tpl) expect(tpl(locals)).to.equal('<header><h1>Foo</h1></header><div class="body">Body</div>')
+          done(err)
+        })
+
+      })
+
     })
 
   })

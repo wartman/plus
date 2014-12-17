@@ -2,9 +2,9 @@
 
 var tags = require('./tags').tags;
 var delimiters = require('./tags').delimiters;
+var uniqueId = require('./utils').uniqueId;
 var Runtime = require('./runtime')["default"];
 var Compiler = require('./compiler')["default"];
-var uniqueId = require('./utils').uniqueId;
 
 
 // Plus

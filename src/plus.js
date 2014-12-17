@@ -1,7 +1,7 @@
 import {tags, delimiters} from './tags'
+import {uniqueId} from './utils'
 import Runtime from './runtime'
 import Compiler from './compiler'
-import {uniqueId} from './utils'
 
 // Plus
 // ----
