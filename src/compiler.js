@@ -30,9 +30,9 @@ class Compiler {
           next(this.getLastWrappedError())
           return
         }
-        output = "ctx || (ctx = {});\nvar __t='';\n__t+=\'" + output + "\';\n return __t"
+        output = "locals || (locals = {});\nvar out='';\nout+=\'" + output + "\';\n return out;"
         try {
-          this._template = Function('ctx, __runtime', output)
+          this._template = Function('locals,rt', output)
         } catch (e) {
           err = e
         }
@@ -76,7 +76,12 @@ class Compiler {
         .setError('No tag found: ' + token.tag)
         .exit()
     }
-    tag.handler(token, this)
+    try {
+      tag.handler(token, this)
+    } catch(e) {
+      this.setError(e).exit()
+      return this
+    }
     return this
   }
 
@@ -101,7 +106,7 @@ class Compiler {
     raw = raw.trim()
     var value = ('.' === raw.charAt(0))
       ? 'sub["' + raw.replace('.', '') + '"]'
-      : 'ctx["' + raw + '"]'
+      : 'locals["' + raw + '"]'
     return value
   }
 

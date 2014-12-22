@@ -14,12 +14,10 @@ describe('Plus', function () {
     
     it('loads templates', function (done) {
       fs.readFile(path.join(__dirname, './fixtures/one.plus'), 'utf-8', function (err, file) {
-        if (err) {
-          done(err)
-          return
-        }
+        if (err) return done(err)
         Plus.compile(path.join(__dirname, './fixtures/one.plus'), file, function (err, tpl) {
-          if (tpl) {
+          if (err) return done(err)
+          try {
             expect(tpl({
               obj: {
                 foo: 'foo',
@@ -27,15 +25,18 @@ describe('Plus', function () {
               },
               foo: 'foo'
             })).to.equal('foo and [inner foobar]')
+          } catch (e) {
+            console.error(e)
+            return done(e)
           }
-          done(err)
+          done()
         })
       })
     })
 
   })
 
-  describe('#extend (+>)', function () {
+  describe('#extend (>)', function () {
 
     it('extends templates', function (done) {
 
@@ -46,13 +47,10 @@ describe('Plus', function () {
         }
 
         fs.readFile(path.join(__dirname, './fixtures/test-layout-expected.html'), 'utf-8', function (err, expected) {
-          if (err) {
-            done(err)
-            return
-          }
+          if (err) return done(err)
 
           Plus.compile(path.join(__dirname, './fixtures/test-layout.plus'), file, function (err, tpl) {
-            if (tpl) {
+            try {
               var actual = tpl({
                 header: {
                   title: 'Foo'
@@ -71,7 +69,9 @@ describe('Plus', function () {
                   ]
                 }
               })
-              expect(actual).to.equal(expected)
+              expect(actual).to.equal(expected)              
+            } catch (e) {
+              return done(e)
             }
             done(err)
           })

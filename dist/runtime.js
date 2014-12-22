@@ -2,75 +2,73 @@
 
 var each = require('./utils').each;
 var escapeHTML = require('./utils').escapeHTML;
-
-
-// Runtime
-// -------
 var Runtime = (function () {
-  var Runtime = function Runtime(templates) {
-    var _this = this;
-    this._templates = {};
-    this._filters = {};
-    each(templates, function (name, tpl) {
-      return _this._templates[name] = tpl;
+  var Runtime = function Runtime() {
+    this._blockHandlers = {};
+    this._defaultHandlers();
+  };
+
+  Runtime.prototype._defaultHandlers = function () {
+    // {{+<context>}}{{/<context>}}
+    this.addBlockHandler("block", function (locals, options) {
+      var context = options.context;
+      var tpl = options.fn;
+      var inverse = options.inverse;
+      if (!context) {
+        context = {};
+        // Placeholders should be rendered even if no content is present
+        tpl = (options.placeholder) ? (inverse || tpl) : (inverse || "");
+      }
+      if ("function" !== typeof tpl) return;
+      if (context instanceof Array) {
+        each(context, function (item, index) {
+          tpl(locals, item);
+        });
+        return;
+      }
+      tpl(locals, context);
+    });
+    // {{?<context>}}{{/}}
+    this.addBlockHandler("if", function (locals, options) {
+      var tpl = options.fn;
+      if (!options.context) tpl = (options.inverse || "");
+      if ("function" !== typeof tpl) return;
+      tpl(locals);
     });
   };
 
-  Runtime.prototype.setFilter = function (name, helper) {
-    this._filters[name] = helper;
+  Runtime.prototype.addBlockHandler = function (type, fn) {
+    this._blockHandlers[type] = fn;
+    return this;
   };
 
-  Runtime.prototype.getFilter = function (name) {
-    return this._filters[name];
+  Runtime.prototype.hasBlockHandler = function (type) {
+    return !!this._blockHandlers[type];
   };
 
-  Runtime.prototype.hasFilter = function (name) {
-    return !!this._filters[name];
+  Runtime.prototype.getBlockHandler = function (type) {
+    return this._blockHandlers[type];
   };
 
-  Runtime.prototype.block = function (locals, context, tpl, negateTpl, options) {
-    if ("object" === typeof negateTpl) {
-      options = negateTpl;
-      negateTpl = false;
+  Runtime.prototype.runBlock = function (type, locals, options) {
+    if (!this.hasBlockHandler(type)) {
+      throw new Error("No block handler of that type found: " + type);
     }
     options || (options = {});
-    if (!context) {
-      context = {};
-      // Placeholders should be rendered even if not content is present
-      tpl = (options.placeholder) ? (negateTpl || tpl) : (negateTpl || "");
-    }
-    if ("function" !== typeof tpl) return;
-    if (context instanceof Array) {
-      each(context, function (item, index) {
-        tpl(locals, item);
-      });
-      return;
-    }
-    tpl(locals, context);
-  };
-
-  Runtime.prototype.ifelse = function (locals, context, tpl, negateTpl) {
-    if (!context) tpl = (negateTpl || "");
-    if ("function" !== typeof tpl) return;
-    tpl(locals);
+    this.getBlockHandler(type).call(this, locals, options);
   };
 
   Runtime.prototype.escapeHtml = function (string, helper) {
     if (helper && this.hasFilter(helper)) string = this.getFilter(helper)(string);
-    return escapeHTML(string);
+    return (string) ? escapeHTML(string) : "";
+  };
+
+  Runtime.prototype.unescapedHtml = function (string) {
+    return (string) ? string += "" : "";
   };
 
   Runtime.prototype.urlEncode = function (url) {
     return encodeURIComponent(url);
-  };
-
-  Runtime.prototype.addTemplate = function (name, template) {
-    this._templates[name] = template;
-  };
-
-  Runtime.prototype.getTemplate = function (name) {
-    if (!name) return this._templates;
-    return this._templates[name];
   };
 
   return Runtime;

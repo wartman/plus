@@ -60,7 +60,7 @@ tags.block = {
       });
     }
     compiler.openBlock(token.value);
-    compiler.write("';\n__runtime.block(ctx, " + value + ", function (ctx, sub) {\n__t+='");
+    compiler.write("';\nrt.runBlock('block',locals,{context:" + value + ",fn:function(locals, sub){\nout+='");
   }
 };
 
@@ -89,11 +89,11 @@ tags.end = {
       return;
     } else if ("block" === currentBlock.type && currentBlock.name === token.value) {
       var output = "';\n}";
-      if (currentBlock.placeholder) output += ",{placeholder:true}";
-      output += ");\n__t+='";
+      if (currentBlock.placeholder) output += ",placeholder:true";
+      output += "});\nout+='";
       compiler.appendOutput(output).closeOpenBlock();
     } else if ("ifelse" === currentBlock.type) {
-      compiler.appendOutput("';\n});\n__t+='").closeOpenBlock();
+      compiler.appendOutput("';\n}});\nout+='").closeOpenBlock();
     } else {
       compiler.setError("Unclosed block: " + currentBlock.name).exit();
       return;
@@ -114,7 +114,7 @@ tags.ifelse = {
     });
     compiler.openBlock(token.value);
     var value = compiler.parseContext(token);
-    compiler.write("';\n__runtime.ifelse(ctx, " + value + ", function (ctx){\n__t+='");
+    compiler.write("';\nrt.runBlock('if',locals,{context:" + value + ",fn:function(locals){\nout+='");
   }
 };
 
@@ -130,7 +130,7 @@ tags.negate = {
       compiler.setError("Unexpected symbol \"!\": " + token.value).exit();
       return;
     }
-    compiler.write("';\n}, function (ctx) {\n__t+='");
+    compiler.write("';\n},inverse:function(locals){\nout+='");
   }
 };
 
@@ -141,7 +141,7 @@ tags.unescaped = {
   priority: 1,
   handler: function (token, compiler) {
     var value = compiler.parseContext(token);
-    compiler.write("'+(" + value + "||'')+'");
+    compiler.write("'+rt.unescapedHtml(" + value + ")+'");
   }
 };
 
@@ -161,11 +161,11 @@ tags.escape = {
           argsParsed[index] = compiler.parseContext(arg);
         }).join(",") + ")";
       });
-      compiler.write("'+__runtime.escapeHtml(__runtime." + helper + "||'')+'");
+      compiler.write("'+rt.escapeHtml(rt." + helper + ")+'");
       return;
     }
     var value = compiler.parseContext(token);
-    compiler.write("'+__runtime.escapeHtml(" + value + "||'')+'");
+    compiler.write("'+rt.escapeHtml(" + value + ")+'");
   }
 };
 

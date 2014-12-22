@@ -57,20 +57,13 @@ class Plus {
       name = uniqueId('tpl')
     }
     compiler.compile((err, template) => {
-      var tpl
-      if (err) {
-        next(err)
-        return
+      if (err) return next(err)
+      if (!options.noWrap) {
+        var wrappedTemplate = template
+        var self = this
+        template = function (locals) { return self.run(wrappedTemplate, locals) }
       }
-      this._runtime.addTemplate(name, template)
-      if (options.noWrap) {
-        tpl = this._runtime.getTemplate(name)
-      } else {
-        tpl = function (locals) {
-          return this.run(this._runtime.getTemplate(name), locals)
-        }.bind(this)
-      }
-      next(null, tpl)
+      next(null, template)
     })
     return this
   }
@@ -78,9 +71,6 @@ class Plus {
   // Run a precompiled template. If compiledTemplate is a string, 
   // plus will attempt to find a template with that name.
   run(compiledTemplate, locals) {
-    if ('string' === typeof compiledTemplate) {
-      compiledTemplate = this._runtime.getTemplate(compiledTemplate)
-    }
     return compiledTemplate(locals, this._runtime)
   }
 
