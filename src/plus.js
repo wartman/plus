@@ -74,31 +74,31 @@ class Plus {
     return compiledTemplate(locals, this._runtime)
   }
 
-}
+  static run(compiledTemplate, locals) {
+    return this.getInstance().run(compiledTemplate, locals)
+  }
 
-Plus.run = function (compiledTemplate, locals) {
-  return this.getInstance().run(compiledTemplate, locals)
-}
+  static compile(name, template, next) {
+    return this.getInstance().compile(name, template, next)
+  }
 
-Plus.compile = function (name, template, next) {
-  return this.getInstance().compile(name, template, next)
-}
+  static precompile(name, template, next) {
+    return this.getInstance().compile(name, template, next, {noWrap: true})
+  }
 
-Plus.precompile = function (name, template, next) {
-  return this.getInstance().compile(name, template, next, {noWrap: true})
-}
+  static setLoader(loader) {
+    return this.getInstance().setLoader(loader)
+  }
 
-Plus.setLoader = function (loader) {
-  return this.getInstance().setLoader(loader)
-}
+  static getLoader() {
+    return this.getInstance().getLoader()
+  }
 
-Plus.getLoader = function () {
-  return this.getInstance().getLoader()
-}
+  static getInstance() {
+    if (!this._instance) this._instance = new Plus()
+    return this._instance
+  }
 
-Plus.getInstance = function () {
-  if (!this._instance) this._instance = new Plus()
-  return this._instance
 }
 
 export default Plus

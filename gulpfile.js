@@ -1,16 +1,16 @@
 var gulp = require('gulp')
 var mocha = require('gulp-mocha')
-var to5 = require('gulp-6to5')
+var babel = require('gulp-babel')
 
-gulp.task('test', ['to5'], function () {
+gulp.task('test', ['babel'], function () {
   return gulp.src('./tests/test_*.js', {read: false})
     .pipe(mocha({reporter: 'spec'}))
 })
 
-gulp.task('to5', function () {
+gulp.task('babel', function () {
   return gulp.src('./src/**/*.js')
-    .pipe(to5())
+    .pipe(babel())
     .pipe(gulp.dest('./dist'))
 })
 
-gulp.task('default', ['to5', 'test'])
+gulp.task('default', ['babel', 'test'])

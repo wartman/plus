@@ -1,13 +1,24 @@
 "use strict";
 
+// Iterator
 exports.each = each;
 exports.uniqueId = uniqueId;
+
+
+// Make sure a given string is javascript safe.
 exports.escapeJS = escapeJS;
+
+
+// Make a string HTML safe
 exports.escapeHTML = escapeHTML;
+
+
+// Make sure a given string is regexp safe.
 exports.escapeRegExp = escapeRegExp;
 function each(obj, callback, context) {
-  if (!obj) return obj;
-  context = (context || obj);
+  if (!obj) {
+    return obj;
+  }context = context || obj;
   if (Array.prototype.forEach && obj.forEach) {
     obj.forEach(callback);
   } else if (obj instanceof Array) {
@@ -44,9 +55,7 @@ var jsEscapes = {
   "\t": "t",
   "\u2028": "u2028",
   "\u2029": "u2029"
-};
-
-function escapeJS(string) {
+};function escapeJS(string) {
   return string.replace(/\\|'|\r|\n|\t|\u2028|\u2029/g, function (match) {
     return "\\" + jsEscapes[match];
   });
@@ -69,15 +78,14 @@ var entityMapMatch = (function () {
     matches.push(key);
   });
   return new RegExp(matches.join("|"));
-})();
-
-function escapeHTML(string) {
+})();function escapeHTML(string) {
   string = "" + string; // ensure stringiness
   return string.replace(entityMapMatch, function (key) {
     return entityMap[key];
   });
-}
-
-function escapeRegExp(string) {
+}function escapeRegExp(string) {
   return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
 }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});

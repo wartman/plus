@@ -1,12 +1,20 @@
 "use strict";
 
-var each = require('./utils').each;
-var escapeJS = require('./utils').escapeJS;
+var _utils = require("./utils");
+
+var each = _utils.each;
+var escapeJS = _utils.escapeJS;
+
+
+// Delimiters
+// ----------
 var delimiters = exports.delimiters = {
   open: "{{",
   close: "}}"
 };
 
+// Tags
+// ----
 var tags = exports.tags = {};
 
 // Comments
@@ -14,7 +22,7 @@ var tags = exports.tags = {};
 tags.comment = {
   tag: "#",
   priority: 0,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     // Just ignore
     compiler.next();
   }
@@ -25,7 +33,7 @@ tags.comment = {
 tags.include = {
   tag: ">",
   priority: 0,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     var loader = compiler.getLoader();
     if (!loader) {
       compiler.setError("No loader registered").exit();
@@ -47,7 +55,7 @@ tags.include = {
 tags.block = {
   tag: "+",
   priority: 1,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     var value = compiler.parseContext(token);
     // Don't overwrite placeholders
     // @todo: This will probably break horribly if two blocks of the same name are
@@ -67,7 +75,7 @@ tags.block = {
 tags.placeholder = {
   tag: "=",
   priority: 1,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     compiler.addBlock({
       name: token.value,
       type: "block",
@@ -80,7 +88,7 @@ tags.placeholder = {
 tags.end = {
   tag: "/",
   priority: 1,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     var currentBlock = compiler.getOpenBlock();
     // Generic blocks must be named when closed (e.g. `{{+foo}}...{{/foo}})
     // while `ifelse` blocks may be closed anonymously (e.g, `{{?foo}}...{{/}})
@@ -107,7 +115,7 @@ tags.end = {
 tags.ifelse = {
   tag: "?",
   priority: 0,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     compiler.addBlock({
       name: token.value,
       type: "ifelse"
@@ -121,7 +129,7 @@ tags.ifelse = {
 tags.negate = {
   tag: "!",
   priority: 1,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     var currentBlock = compiler.getOpenBlock();
     if (!currentBlock) {
       compiler.setError("No open block: " + token.value).exit();
@@ -139,7 +147,7 @@ tags.negate = {
 tags.unescaped = {
   tag: "-",
   priority: 1,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     var value = compiler.parseContext(token);
     compiler.write("'+rt.unescapedHtml(" + value + ")+'");
   }
@@ -148,7 +156,7 @@ tags.unescaped = {
 tags.escape = {
   tag: null,
   priority: 2,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     if (token.value.indexOf("(") > 0) {
       // Compile as a helper.
       var helper = token.value.replace(/\(([\s\S]+?)\)/g, function (match, args) {
@@ -172,7 +180,10 @@ tags.escape = {
 tags.txt = {
   tag: null,
   priority: 2,
-  handler: function (token, compiler) {
+  handler: function handler(token, compiler) {
     compiler.write("'+'" + escapeJS(token.value) + "'+'");
   }
 };
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
